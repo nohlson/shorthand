@@ -1,4 +1,4 @@
-## Shorthand — Local “Copilot for Terminal”
+## Shorthand — Very lightweight local only prompt-to-command CLI
 
 Local-only CLI that turns natural-language prompts into one safe zsh command using a tiny Ollama model.
 
