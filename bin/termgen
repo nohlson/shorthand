@@ -7,6 +7,8 @@
 //   --unsafe        (permits destructive output)
 
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 function parseFlags(argv) {
   const flags = { model: 'cmdgen', explain: false, unsafe: false };
@@ -90,6 +92,55 @@ function sanitizeModelOutput(line) {
   return s.trim();
 }
 
+(function ensureStdioNoBlock() {
+  // Best-effort to avoid hanging if parent process closes stdio
+  try { process.stdin.setMaxListeners(0); } catch (_) {}
+  try { process.stdout.setMaxListeners(0); } catch (_) {}
+  try { process.stderr.setMaxListeners(0); } catch (_) {}
+})();
+
+function buildCwdContext() {
+  try {
+    const cwd = process.cwd();
+    let entries = [];
+    try {
+      const dirents = fs.readdirSync(cwd, { withFileTypes: true });
+      // Format: directories end with '/', files are plain names
+      entries = dirents
+        .map((d) => (d.name || ''))
+        .filter((n) => n && n !== '.' && n !== '..')
+        .map((name) => {
+          let suffix = '';
+          try {
+            const st = fs.lstatSync(path.join(cwd, name));
+            if (st.isDirectory()) suffix = '/';
+          } catch (_) {}
+          return name + suffix;
+        })
+        .sort((a, b) => a.localeCompare(b));
+    } catch (_) {
+      // ignore directory read errors; we will still send cwd
+    }
+
+    const MAX_ENTRIES = 200;
+    const trimmed = entries.slice(0, MAX_ENTRIES);
+    const more = entries.length > MAX_ENTRIES ? `\n# … ${entries.length - MAX_ENTRIES} more not shown` : '';
+
+    const lines = [
+      '--8<-- CWD CONTEXT START',
+      `cwd: ${cwd}`,
+      'entries:',
+      ...trimmed.map((e) => `- ${e}`),
+      more && more,
+      '--8<-- CWD CONTEXT END',
+    ].filter(Boolean);
+
+    return '\n\n' + lines.join('\n');
+  } catch (_) {
+    return '';
+  }
+}
+
 (async () => {
   try {
     const { flags, rest } = parseFlags(process.argv.slice(2));
@@ -97,7 +148,7 @@ function sanitizeModelOutput(line) {
     if (!content) process.exit(1);
 
     const sysPrompt = undefined; // System prompt lives in the Modelfile
-    const userPrompt = content + (flags.unsafe ? ' [allow-destructive: yes]' : '');
+    const userPrompt = content + (flags.unsafe ? ' [allow-destructive: yes]' : '') + buildCwdContext();
 
     const payloadObj = {
       model: flags.model,

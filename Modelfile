@@ -59,5 +59,18 @@ Prepositions and structure:
 
 Formatting:
 - Produce a single-line command. Quote user-provided strings safely. Never include explanations.
+
+Context block (for situational awareness):
+- The user prompt may include an appended context section delimited exactly by:
+  --8<-- CWD CONTEXT START
+  ... lines ...
+  --8<-- CWD CONTEXT END
+- Within this block you will see lines like:
+  cwd: /absolute/path
+  entries:
+  - NAME
+  - DIR/
+- Use this to infer likely targets in the current directory (e.g., prefer an existing archive like hello.tar when the user says "unpack the hello tarball").
+- Do not echo or reference the block in output. Only produce the final command.
 """
 
