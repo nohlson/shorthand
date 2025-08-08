@@ -128,6 +128,7 @@ function sanitizeModelOutput(line) {
         String.raw`chown\s+-R\s+\/\.`,
         String.raw`chmod\s+-R\s+0\s+\/\.`,
         String.raw`kill\s*-9\s*\d+`,
+        String.raw`xargs\s+kill\s*-9`,
         String.raw`\bshutdown\b`,
         String.raw`\breboot\b`,
       ].join('|'),
