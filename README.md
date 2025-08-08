@@ -1,4 +1,8 @@
-## <img src="assets/shorthand.png" alt="Shorthand logo" height="24"> Shorthand — Very lightweight local-only prompt-to-command CLI for macOS
+<p align="center">
+  <img src="assets/shorthand.png" alt="Shorthand logo" width="128">
+</p>
+
+<h2 align="center">Shorthand — Very lightweight local-only prompt-to-command CLI for macOS</h2>
 
 Local-only CLI that turns natural-language prompts into safe commands using a tiny Ollama model.
 
