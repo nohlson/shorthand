@@ -54,7 +54,7 @@ ensure_zshrc_autoload() {
     {
       printf "\n%s\n" "$marker"
       printf "if command -v shorthand-init >/dev/null 2>&1; then\n"
-      printf "  source \"\$(command -v shorthand-init)\"\n"
+      printf "  \"\$(command -v shorthand-init)\" >/dev/null 2>&1 || true\n"
       printf "fi\n"
     } >> "$rc"
     info "Added. Open a new terminal or run: exec zsh"

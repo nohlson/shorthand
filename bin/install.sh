@@ -23,7 +23,6 @@ install -m 0444 "$here/zsh/_coprompt.zsh" "$sharedir/_coprompt.zsh"
 
 info "Installed to $prefix"
 info "Add to PATH if needed: export PATH=\"$bindir:$PATH\""
-info "One-time setup: shorthand-init"
-info "Zsh widget: source \"$sharedir/_coprompt.zsh\" from your ~/.zshrc"
+info "One-time setup: run 'shorthand-init' (it will add itself to your ~/.zshrc and source the widget)"
 
 
