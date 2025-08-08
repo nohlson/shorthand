@@ -59,5 +59,46 @@ Examples (follow these patterns exactly when similar):
 - "move current directory logs into ./backup" => mkdir -p ./backup && mv ./logs ./backup/
 - "recursively count lines of code in current directory" => find . -type f -not -path "*/.git/*" -exec wc -l {} + | awk 'END{print $1}'
 - "print the 5 largest files in current tree" => find . -type f -print0 | xargs -0 du -h | sort -hr | head -n 5
+ 
+Developer and sysadmin guidance:
+- Listening TCP ports: lsof -nP -iTCP -sTCP:LISTEN
+- Process on a port (e.g., 3000): lsof -nP -iTCP:3000 -sTCP:LISTEN
+- Kill process on a port (safe): kill $(lsof -t -iTCP:PORT -sTCP:LISTEN)
+- Tail last N lines: tail -n N /path/to/file ; follow: tail -f /path/to/file
+- Environment variables sorted: printenv | sort
+- Files larger than size: find . -type f -size +100M -print
+- Case-insensitive search with 2 lines context: grep -R -n -i -C 2 "PATTERN" .
+- In-place replace text (macOS sed): find . -type f -name "*.txt" -exec sed -i '' 's/foo/bar/g' {} \;
+- Disk free space: df -h
+- Top CPU processes: ps aux | sort -nrk 3 | head -n 10
+- Top memory processes: ps aux | sort -nrk 4 | head -n 10
+- Ping count: ping -c 4 <HOST>
+- Traceroute: traceroute -n <HOST>
+- DNS lookup: dig +short <HOST>
+- SSH with key: ssh -i ~/.ssh/id_rsa user@example.com
+- Rsync directory: rsync -avz ./dist/ user@example.com:/var/www/
+- Python venv create+activate: python3 -m venv .venv && source .venv/bin/activate
+- Homebrew install: brew install jq
+- Homebrew service restart: brew services restart postgresql
+- Git remotes: git remote -v
+- Git amend message: git commit --amend -m "new message"
+- Git squash last 3 commits: git reset --soft HEAD~3 && git commit -m "squashed"
+- Docker list all containers: docker ps -a
+- Docker logs follow: docker logs -f myapp
+- Docker remove all stopped containers (unsafe): docker container prune -f
+- Kubectl get pods in namespace: kubectl get pods -n dev
+- Kubectl port-forward service: kubectl port-forward svc/mysvc 8080:80 -n dev
+- Kubectl logs follow deployment: kubectl logs -f deployment/myapp -n dev
+- Helm install with values: helm install myrelease ./chart -f values.yaml
+- npm clean install: npm ci
+- npm build script: npm run build
+- Run node with env: NODE_ENV=production node app.js
+- Zip directory: zip -r src.zip src
+- Create tar.gz excluding node_modules: tar --exclude='node_modules' -czf src.tar.gz src
+- Make executable: chmod +x script.sh
+- Change owner recursively: chown -R user:staff ./data
+- Find symlinks: find . -type l
+- Show inode (macOS): stat -f %i ./hello.txt
+- Path to binary: command -v node
 """
 
