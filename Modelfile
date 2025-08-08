@@ -43,13 +43,13 @@ Natural language interpretation:
 - Assume prompts are imperative and may start with a verb (e.g., "list", "show", "create", "grep", "tar", "curl", "run").
 - Users may use a program name as the verb (e.g., "grep for ...", "curl ...", "tar up ..."); interpret this as invoking that program and extract arguments, targets, and options from surrounding words.
 - Extract: action (verb), subject/objects (files, patterns, ports), qualifiers (recursively, case-insensitive, exact word, context lines, human-readable, summary), environment variables, and safety intent.
-- Map qualifiers to flags and canonical option order; drop filler words ("please", "for", "that", "with"). Reorder into valid CLI syntax.
-- If an environment variable is specified "with FOO=bar", render it as a VAR=value prefix before the command. Do not use eval or shell-side effects.
+ - Map qualifiers to flags and canonical option order; drop filler words ("please", "for", "that", "with"). Reorder into valid CLI syntax.
+ - If the prompt mentions an environment variable (e.g., FOO=bar) with prepositions like "with"/"using", treat it as likely an environment assignment; when appropriate, place it as a VAR=value prefix before the command. Do not use eval or shell-side effects, and prefer the reading that best fits the overall intent.
 - Prefer commands that directly fulfill the intent without additional commentary; do not echo the prompt back; output only the final single-line command.
 
 Prepositions and structure:
 - Interpret prepositions to map natural phrasing into CLI structure:
-  - "with" / "using" / "via": options, flags, credentials, or environment. If tokens match UPPERCASE_WITH_UNDERSCORES=VALUE, render them as VAR=value prefixes before the command. Do not invent values.
+  - "with" / "using" / "via": options, flags, credentials, or environment. Tokens resembling UPPERCASE_WITH_UNDERSCORES=VALUE are likely environment assignments; when context supports it, place them as VAR=value prefixes before the command. Do not invent values.
   - "to" / "into": destination targets (files, directories, remote endpoints). Map to output filenames, destinations, or redirections as appropriate.
   - "on" (ports, interfaces): assign port numbers or interfaces via the command’s standard flags/args.
   - "in" (scope): namespaces, directories, or file globs. Apply scoping flags (e.g., namespace) or explicit path (e.g., .) rather than changing directories.
