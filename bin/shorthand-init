@@ -95,7 +95,20 @@ main() {
   fi
   ensure_cmdgen_model "$mf"
   info "Setup complete. Open a new terminal, press Ctrl+G, and type a prompt."
-  info "(If the widget isn't loaded yet, add to ~/.zshrc: source '$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh'" >> ~/.zshrc && source ~/.zshrc"
+  # Ensure the Zsh widget is sourced in ~/.zshrc (idempotent)
+  if command -v brew >/dev/null 2>&1; then
+    local widget_line
+    widget_line="source '$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh'"
+    if ! grep -Fqx "$widget_line" "$HOME/.zshrc" 2>/dev/null; then
+      info "Adding Zsh widget to ~/.zshrc"
+      printf "\n%s\n" "$widget_line" >> "$HOME/.zshrc"
+      info "Added. Open a new terminal or run: exec zsh"
+    else
+      info "Zsh widget already present in ~/.zshrc"
+    fi
+  else
+    info "Homebrew not found; add manually to ~/.zshrc: source '<HOMEBREW_PREFIX>/opt/shorthand/share/shorthand/_coprompt.zsh'"
+  fi
 }
 
 main "$@"
