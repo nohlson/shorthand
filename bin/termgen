@@ -1,0 +1,114 @@
+#!/usr/bin/env node
+
+// Local-only CLI that queries the Ollama server and prints exactly one zsh command.
+// Flags:
+//   --model=<name> (default: cmdgen)
+//   --explain       (prints a one-line # comment before the command)
+//   --unsafe        (permits destructive output)
+
+const http = require('http');
+
+function parseFlags(argv) {
+  const flags = { model: 'cmdgen', explain: false, unsafe: false };
+  const rest = [];
+  for (const arg of argv) {
+    if (arg.startsWith('--model=')) {
+      flags.model = arg.slice('--model='.length);
+    } else if (arg === '--explain') {
+      flags.explain = true;
+    } else if (arg === '--unsafe') {
+      flags.unsafe = true;
+    } else {
+      rest.push(arg);
+    }
+  }
+  return { flags, rest };
+}
+
+function promptFromArgsOrStdin(restArgs) {
+  return new Promise((resolve) => {
+    const arg = restArgs.join(' ').trim();
+    if (arg) return resolve(arg);
+    let buf = '';
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (d) => (buf += d));
+    process.stdin.on('end', () => resolve(buf.trim()))
+    if (process.stdin.isTTY) {
+      process.stderr.write('Prompt: ');
+      process.stdin.resume();
+    }
+  });
+}
+
+function chatOnce({ host = '127.0.0.1', port = 11434, path = '/api/chat', payload }) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { host, port, path, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } },
+      (res) => {
+        let out = '';
+        res.setEncoding('utf8');
+        res.on('data', (d) => (out += d));
+        res.on('end', () => {
+          try {
+            const data = JSON.parse(out);
+            resolve(data);
+          } catch (e) {
+            reject(new Error('invalid_json'));
+          }
+        });
+      }
+    );
+    req.on('error', (err) => reject(err));
+    req.write(payload);
+    req.end();
+  });
+}
+
+function firstNonEmptyLine(text) {
+  return (text || '')
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l.length > 0) || '';
+}
+
+(async () => {
+  try {
+    const { flags, rest } = parseFlags(process.argv.slice(2));
+    const content = await promptFromArgsOrStdin(rest);
+    if (!content) process.exit(1);
+
+    const sysPrompt = undefined; // System prompt lives in the Modelfile
+    const userPrompt = content + (flags.unsafe ? ' [allow-destructive: yes]' : '');
+
+    const payloadObj = {
+      model: flags.model,
+      messages: [
+        ...(sysPrompt ? [{ role: 'system', content: sysPrompt }] : []),
+        { role: 'user', content: userPrompt },
+      ],
+      stream: false,
+    };
+    const payload = JSON.stringify(payloadObj);
+
+    const data = await chatOnce({ payload });
+    const text = (data && data.message && data.message.content) ? String(data.message.content) : '';
+    const line = firstNonEmptyLine(text);
+    if (!line) process.exit(2);
+
+    // Enforce safety client-side as a backstop if model slips
+    const destructivePatterns = /(rm\s+-rf|mkfs\.|dd\s+of=|: \(\) \{ \s*:\|:\s*; \}\s*:\s*|chown\s+-R\s+\/.+|chmod\s+-R\s+0\s+\/.+|kill\s+-9\s+\d+|shutdown\b|reboot\b)/i;
+    if (!flags.unsafe && destructivePatterns.test(line)) {
+      process.stdout.write('echo "# refused: destructive without --unsafe"');
+      return;
+    }
+
+    if (flags.explain) {
+      process.stdout.write(`# ${content}\n`);
+    }
+    process.stdout.write(line);
+  } catch (err) {
+    process.exit(2);
+  }
+})();
+
+
