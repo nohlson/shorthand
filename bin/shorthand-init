@@ -94,7 +94,8 @@ main() {
     die "Modelfile not found. Set SHORTHAND_MODELDIR or reinstall."
   fi
   ensure_cmdgen_model "$mf"
-  info "Setup complete. Try: termgen --model=cmdgen 'list files recursively'"
+  info "Setup complete. Open a new terminal, press Ctrl+G, and type a prompt."
+  info "(If the widget isn't loaded yet, add to ~/.zshrc: source '$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh'" >> ~/.zshrc && source ~/.zshrc"
 }
 
 main "$@"

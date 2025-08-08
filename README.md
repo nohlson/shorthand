@@ -2,76 +2,73 @@
 
 Local-only CLI that turns natural-language prompts into safe commands using a tiny Ollama model.
 
-### Install (manual)
-
-1) Install and run Ollama
-
-```sh
-brew install ollama
-brew services start ollama
-```
-
-2) Build the small local model
-
-```sh
-ollama create cmdgen -f Modelfile
-```
-
-Optional: pull base model first (done automatically if missing):
-
-```sh
-ollama pull llama3.2:3b
-```
-
-3) Make CLI executable
-
-```sh
-chmod +x bin/termgen bin/shorthand-init
-```
-
-Or use the manual installer to install to `~/.local` (bin/share), then run the initializer:
-
-```sh
-./bin/install.sh
-shorthand-init
-```
-
-### Install from tap (Homebrew)
+### Install (Homebrew)
 
 ```sh
 brew tap nohlson/tap
 brew install nohlson/tap/shorthand
 ```
 
-After install, run the initializer once to set up the model:
+Then:
+
+1) Install and start Ollama
+
+```sh
+brew install ollama && brew services start ollama
+```
+
+2) One-time model setup
 
 ```sh
 shorthand-init
 ```
 
-The `Modelfile` is installed to a shared location, and `shorthand-init` will find it automatically. Re-run with `SHORTHAND_MODELDIR=/path` to point to a custom `Modelfile`.
-
-### Usage
-
-### Zsh Widget
-
-Source the Zsh widget from your `~/.zshrc`:
+3) Add the Zsh widget to your `~/.zshrc`
 
 ```sh
-source "$HOME/shorthand/zsh/_coprompt.zsh"
+echo "source '$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh'" >> ~/.zshrc && source ~/.zshrc
+```
 
-If installed via Homebrew, you can also source the file from the opt path:
+4) Use it
+
+- In your terminal use Ctrl+G and type a prompt (e.g., "create file its_a_great_day.txt) and press enter.
+
+### Manual install
+
+0) Clone this repo
 
 ```sh
-source "$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh"
-```
+git clone https://github.com/nohlson/shorthand.git
+cd shorthand
 ```
 
-Press Ctrl+G, type a prompt, and the command is inserted into your buffer (not auto-run). Prefix your prompt with `--unsafe` to allow destructive commands.
+1) Install and start Ollama
+
+```sh
+brew install ollama && brew services start ollama
+```
+
+2) Install CLI and assets to `~/.local`
+
+```sh
+./bin/install.sh
+```
+
+3) One-time model setup (required before first use)
+
+```sh
+shorthand-init
+```
+
+4) Add the Zsh widget to your `~/.zshrc`
+
+```sh
+echo "source '$HOME/.local/share/shorthand/_coprompt.zsh'" >> ~/.zshrc && source ~/.zshrc
+```
 
 ### Safety
 
-- Destructive operations require `--unsafe`; otherwise it emits:
+- Destructive operations require `--unsafe` prior to any other prompt; without;
 
 ```sh
 echo "# refused: destructive without --unsafe"
