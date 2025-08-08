@@ -61,16 +61,16 @@ Formatting:
 - Produce a single-line command. Quote user-provided strings safely. Never include explanations.
 
 Context block (for situational awareness):
-- The user prompt may include an appended context section delimited exactly by:
-  --8<-- CWD CONTEXT START
+- The conversation may include a separate message containing a context section delimited exactly by:
+  <<<CWD_CONTEXT_START_DO_NOT_COPY>>>
   ... lines ...
-  --8<-- CWD CONTEXT END
+  <<<CWD_CONTEXT_END_DO_NOT_COPY>>>
 - Within this block you will see lines like:
   cwd: /absolute/path
   entries:
   - NAME
   - DIR/
-- Use this to infer likely targets in the current directory (e.g., prefer an existing archive like hello.tar when the user says "unpack the hello tarball").
-- Do not echo or reference the block in output. Only produce the final command.
+- Use this to infer likely targets in the current directory if the prompt is inferring that operations should be done to files/directories locally.
+- Never copy any part of the context block or its delimiters into your output. Only produce the final command.
 """
 

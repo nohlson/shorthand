@@ -99,6 +99,9 @@ function sanitizeModelOutput(line) {
   try { process.stderr.setMaxListeners(0); } catch (_) {}
 })();
 
+const CONTEXT_START = '<<<CWD_CONTEXT_START_DO_NOT_COPY>>>';
+const CONTEXT_END = '<<<CWD_CONTEXT_END_DO_NOT_COPY>>>';
+
 function buildCwdContext() {
   try {
     const cwd = process.cwd();
@@ -127,15 +130,16 @@ function buildCwdContext() {
     const more = entries.length > MAX_ENTRIES ? `\n# … ${entries.length - MAX_ENTRIES} more not shown` : '';
 
     const lines = [
-      '--8<-- CWD CONTEXT START',
+      CONTEXT_START,
+      '# Context for disambiguation; do not include any of these lines or tags in your output.',
       `cwd: ${cwd}`,
       'entries:',
       ...trimmed.map((e) => `- ${e}`),
       more && more,
-      '--8<-- CWD CONTEXT END',
+      CONTEXT_END,
     ].filter(Boolean);
 
-    return '\n\n' + lines.join('\n');
+    return lines.join('\n');
   } catch (_) {
     return '';
   }
@@ -148,13 +152,15 @@ function buildCwdContext() {
     if (!content) process.exit(1);
 
     const sysPrompt = undefined; // System prompt lives in the Modelfile
-    const userPrompt = content + (flags.unsafe ? ' [allow-destructive: yes]' : '') + buildCwdContext();
+    const userPrompt = content + (flags.unsafe ? ' [allow-destructive: yes]' : '');
+    const contextBlock = buildCwdContext();
 
     const payloadObj = {
       model: flags.model,
       messages: [
         ...(sysPrompt ? [{ role: 'system', content: sysPrompt }] : []),
         { role: 'user', content: userPrompt },
+        ...(contextBlock ? [{ role: 'user', content: `The following lines are context to help interpret file and directory names. Do not copy any of it.\n${contextBlock}` }] : []),
       ],
       stream: false,
     };
@@ -163,7 +169,15 @@ function buildCwdContext() {
     const data = await chatOnce({ payload });
     const text = (data && data.message && data.message.content) ? String(data.message.content) : '';
     const line = firstNonEmptyLine(text);
-    const sanitized = sanitizeModelOutput(line);
+    let sanitized = sanitizeModelOutput(line);
+    // Extra safety: strip any leaked context tags if the model echoed them
+    const leakTags = [CONTEXT_START, CONTEXT_END, '--8<-- CWD CONTEXT START', '--8<-- CWD CONTEXT END'];
+    for (const tag of leakTags) {
+      const idx = sanitized.indexOf(tag);
+      if (idx !== -1) {
+        sanitized = sanitized.slice(0, idx).trim();
+      }
+    }
     if (!sanitized) process.exit(2);
 
     // Enforce safety client-side as a backstop if model slips
