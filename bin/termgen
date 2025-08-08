@@ -116,7 +116,23 @@ function sanitizeModelOutput(line) {
     if (!sanitized) process.exit(2);
 
     // Enforce safety client-side as a backstop if model slips
-    const destructivePatterns = /(rm\s+-rf|mkfs\.|dd\s+of=|: \(\) \{ \s*:\|:\s*; \}\s*:\s*|chown\s+-R\s+\/.+|chmod\s+-R\s+0\s+\/.+|kill\s+-9\s+\d+|shutdown\b|reboot\b)/i;
+    // Consider any explicit deletion or forceful termination as destructive unless --unsafe
+    const destructivePatterns = new RegExp(
+      [
+        String.raw`\brm\b`,
+        String.raw`\brmdir\b`,
+        String.raw`find[\s\S]*?(-delete| -exec\s+rm\b)`,
+        String.raw`mkfs\.`,
+        String.raw`dd\s+of=`,
+        String.raw`: \(\) \{ \s*:\|:\s*; \}\s*:\s*`,
+        String.raw`chown\s+-R\s+\/\.`,
+        String.raw`chmod\s+-R\s+0\s+\/\.`,
+        String.raw`kill\s*-9\s*\d+`,
+        String.raw`\bshutdown\b`,
+        String.raw`\breboot\b`,
+      ].join('|'),
+      'i'
+    );
     if (!flags.unsafe && destructivePatterns.test(sanitized)) {
       process.stdout.write('echo "# refused: destructive without --unsafe"');
       return;
