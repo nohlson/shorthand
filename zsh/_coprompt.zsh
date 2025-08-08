@@ -1,7 +1,7 @@
 function _coprompt() {
   local q cmd unsafe_flag=""
   zle -I
-  printf 'Ask for a command: ' > /dev/tty
+  printf 'Generate a command: ' > /dev/tty
   IFS= read -r q < /dev/tty
   [[ -z "$q" ]] && return 0
 

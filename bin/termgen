@@ -71,6 +71,25 @@ function firstNonEmptyLine(text) {
     .find((l) => l.length > 0) || '';
 }
 
+function sanitizeModelOutput(line) {
+  if (!line) return '';
+  let s = String(line).trim();
+  // Strip fenced code blocks if present
+  if (s.startsWith('```')) {
+    s = s.replace(/^```[a-zA-Z0-9_-]*\s*/, '');
+    s = s.replace(/\s*```$/, '');
+    s = firstNonEmptyLine(s);
+  }
+  // Remove wrapping single backticks and any stray backticks
+  if (s.startsWith('`') && s.endsWith('`')) {
+    s = s.slice(1, -1).trim();
+  }
+  s = s.replace(/`/g, '');
+  // Drop common prompt prefixes
+  s = s.replace(/^\s*(?:\$|❯|>|PS>|%)\s+/, '');
+  return s.trim();
+}
+
 (async () => {
   try {
     const { flags, rest } = parseFlags(process.argv.slice(2));
@@ -93,11 +112,12 @@ function firstNonEmptyLine(text) {
     const data = await chatOnce({ payload });
     const text = (data && data.message && data.message.content) ? String(data.message.content) : '';
     const line = firstNonEmptyLine(text);
-    if (!line) process.exit(2);
+    const sanitized = sanitizeModelOutput(line);
+    if (!sanitized) process.exit(2);
 
     // Enforce safety client-side as a backstop if model slips
     const destructivePatterns = /(rm\s+-rf|mkfs\.|dd\s+of=|: \(\) \{ \s*:\|:\s*; \}\s*:\s*|chown\s+-R\s+\/.+|chmod\s+-R\s+0\s+\/.+|kill\s+-9\s+\d+|shutdown\b|reboot\b)/i;
-    if (!flags.unsafe && destructivePatterns.test(line)) {
+    if (!flags.unsafe && destructivePatterns.test(sanitized)) {
       process.stdout.write('echo "# refused: destructive without --unsafe"');
       return;
     }
@@ -105,7 +125,7 @@ function firstNonEmptyLine(text) {
     if (flags.explain) {
       process.stdout.write(`# ${content}\n`);
     }
-    process.stdout.write(line);
+    process.stdout.write(sanitized);
   } catch (err) {
     process.exit(2);
   }
