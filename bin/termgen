@@ -148,11 +148,15 @@ function buildCwdContext() {
 (async () => {
   try {
     const { flags, rest } = parseFlags(process.argv.slice(2));
-    const content = await promptFromArgsOrStdin(rest);
+    let content = await promptFromArgsOrStdin(rest);
     if (!content) process.exit(1);
 
     const sysPrompt = undefined; // System prompt lives in the Modelfile
-    const userPrompt = content + (flags.unsafe ? ' [allow-destructive: yes]' : '');
+    const contentHasUnsafe = /(?<=^|\s)--unsafe(?=$|\s)/.test(content);
+    if (contentHasUnsafe) {
+      flags.unsafe = true;
+    }
+    const userPrompt = content + (flags.unsafe && !contentHasUnsafe ? ' --unsafe' : '');
     const contextBlock = buildCwdContext();
 
     const payloadObj = {
