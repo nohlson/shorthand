@@ -40,9 +40,7 @@ shorthand-init
 
 ```sh
 brew tap nohlson/tap
-brew install nohlson/tap/shorthand        # stable when tagged
-# or latest main branch:
-brew install --HEAD nohlson/tap/shorthand
+brew install nohlson/tap/shorthand
 ```
 
 After install, run the initializer once to set up the model:
@@ -78,14 +76,3 @@ Press Ctrl+G, type a prompt, and the command is inserted into your buffer (not a
 ```sh
 echo "# refused: destructive without --unsafe"
 ```
-
-### Packaging notes
-
-- Files installed by Homebrew (planned):
-  - `bin/termgen` → `$(brew --prefix)/bin/termgen`
-  - `bin/shorthand-init` → `$(brew --prefix)/bin/shorthand-init`
-  - `Modelfile` → `$(brew --prefix)/opt/shorthand/share/shorthand/Modelfile`
-  - `zsh/_coprompt.zsh` → `$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh`
-  - `README.md` → `$(brew --prefix)/opt/shorthand/README.md`
-
-- Post-install guidance will ask users to run `shorthand-init` once to create the model.
