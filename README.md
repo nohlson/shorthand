@@ -1,3 +1,6 @@
+<img src="assets/logo.png" alt="<PROJECT_NAME> logo" width="40" align="left" />
+
+<br clear="left"/>
 ## Shorthand — Very lightweight local-only prompt-to-command CLI for macOS
 
 Local-only CLI that turns natural-language prompts into safe commands using a tiny Ollama model.
