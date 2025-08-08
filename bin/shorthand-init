@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# shorthand-init: prepare dependencies and model for Shorthand CLI
+# - Ensures Ollama is installed and running
+# - Pulls llama3.2:3b if missing
+# - Creates the cmdgen model from the Modelfile installed with Shorthand
+
+info() { printf "[shorthand] %s\n" "$*"; }
+warn() { printf "[shorthand] WARN: %s\n" "$*" >&2; }
+die() { printf "[shorthand] ERROR: %s\n" "$*" >&2; exit 1; }
+
+# Resolve Modelfile path
+resolve_modelfile() {
+  # 1) SHORTHAND_MODELDIR env var
+  if [[ -n "${SHORTHAND_MODELDIR:-}" && -f "$SHORTHAND_MODELDIR/Modelfile" ]]; then
+    printf "%s\n" "$SHORTHAND_MODELDIR/Modelfile"
+    return 0
+  fi
+
+  # 2) XDG-style local share (manual install)
+  local xdg_mf="$HOME/.local/share/shorthand/Modelfile"
+  if [[ -f "$xdg_mf" ]]; then
+    printf "%s\n" "$xdg_mf"
+    return 0
+  fi
+
+  # 3) Homebrew opt path
+  if command -v brew >/dev/null 2>&1; then
+    local brew_prefix
+    brew_prefix="$(brew --prefix)"
+    local mf1="$brew_prefix/opt/shorthand/share/shorthand/Modelfile"
+    [[ -f "$mf1" ]] && { printf "%s\n" "$mf1"; return 0; }
+  fi
+
+  # 4) Relative to this repo (developer checkout)
+  local script_dir
+  script_dir="$(cd "$(dirname -- "$0")" && pwd)"
+  local mf2="$script_dir/../Modelfile"
+  [[ -f "$mf2" ]] && { printf "%s\n" "$mf2"; return 0; }
+
+  return 1
+}
+
+ensure_ollama_installed() {
+  if ! command -v ollama >/dev/null 2>&1; then
+    warn "Ollama not found. Install with: brew install ollama"
+    die "Ollama is required. See https://ollama.com/download for alternatives."
+  fi
+}
+
+ensure_ollama_running() {
+  # Try to start via brew services if available; otherwise background start
+  if command -v brew >/dev/null 2>&1; then
+    if ! pgrep -f "/Applications/Ollama.app|ollama serve" >/dev/null 2>&1; then
+      info "Starting ollama service (brew services)..."
+      brew services start ollama >/dev/null 2>&1 || true
+      sleep 1
+    fi
+  fi
+  # Final check: ping API
+  if ! curl -sS http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+    info "Starting ollama in background..."
+    (nohup ollama serve >/dev/null 2>&1 &)
+    sleep 2
+  fi
+  # Validate reachable
+  curl -sS http://127.0.0.1:11434/api/version >/dev/null || die "Ollama API not responding on 127.0.0.1:11434"
+}
+
+ensure_base_model() {
+  if ! ollama list 2>/dev/null | awk '{print $1}' | grep -q "^llama3.2:3b$"; then
+    info "Pulling base model llama3.2:3b (first time can take a while)..."
+    ollama pull llama3.2:3b
+  fi
+}
+
+ensure_cmdgen_model() {
+  local modelfile_path="$1"
+  if ! ollama list 2>/dev/null | awk '{print $1}' | grep -q "^cmdgen$"; then
+    info "Creating cmdgen model from Modelfile..."
+    ollama create cmdgen -f "$modelfile_path"
+  else
+    info "cmdgen model already exists. Use 'ollama rm cmdgen' to recreate."
+  fi
+}
+
+main() {
+  ensure_ollama_installed
+  ensure_ollama_running
+  ensure_base_model
+  local mf
+  if ! mf="$(resolve_modelfile)"; then
+    die "Modelfile not found. Set SHORTHAND_MODELDIR or reinstall."
+  fi
+  ensure_cmdgen_model "$mf"
+  info "Setup complete. Try: termgen --model=cmdgen 'list files recursively'"
+}
+
+main "$@"
+
+
