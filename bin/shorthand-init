@@ -10,6 +10,59 @@ info() { printf "[shorthand] %s\n" "$*"; }
 warn() { printf "[shorthand] WARN: %s\n" "$*" >&2; }
 die() { printf "[shorthand] ERROR: %s\n" "$*" >&2; exit 1; }
 
+# Locate installed _coprompt.zsh for sourcing into the current zsh session
+find_widget_path() {
+  # 1) Homebrew installation path
+  if command -v brew >/dev/null 2>&1; then
+    local brew_prefix
+    brew_prefix="$(brew --prefix)"
+    local w1="$brew_prefix/opt/shorthand/share/shorthand/_coprompt.zsh"
+    [[ -f "$w1" ]] && { printf "%s\n" "$w1"; return 0; }
+  fi
+
+  # 2) Manual install path (~/.local/share)
+  local w2="$HOME/.local/share/shorthand/_coprompt.zsh"
+  [[ -f "$w2" ]] && { printf "%s\n" "$w2"; return 0; }
+
+  # 3) Relative to this repo checkout
+  local script_dir
+  script_dir="$(cd "$(dirname -- "$0")" && pwd)"
+  local w3="$script_dir/../zsh/_coprompt.zsh"
+  [[ -f "$w3" ]] && { printf "%s\n" "$w3"; return 0; }
+
+  return 1
+}
+
+# Source the zsh widget into the current shell if we're running under zsh
+source_widget_if_possible() {
+  # Only attempt in zsh; sourcing a zsh widget in bash would error
+  if [[ -n "${ZSH_VERSION:-}" ]]; then
+    local widget
+    if widget="$(find_widget_path 2>/dev/null)" && [[ -r "$widget" ]]; then
+      # shellcheck disable=SC1090
+      source "$widget" || true
+    fi
+  fi
+}
+
+# Ensure ~/.zshrc runs shorthand-init on new interactive shells (idempotent)
+ensure_zshrc_autoload() {
+  local rc="$HOME/.zshrc"
+  local marker="# Shorthand: init"
+  if ! grep -Fqx "$marker" "$rc" 2>/dev/null; then
+    info "Adding shorthand-init to ~/.zshrc"
+    {
+      printf "\n%s\n" "$marker"
+      printf "if command -v shorthand-init >/dev/null 2>&1; then\n"
+      printf "  source \"\$(command -v shorthand-init)\"\n"
+      printf "fi\n"
+    } >> "$rc"
+    info "Added. Open a new terminal or run: exec zsh"
+  else
+    info "shorthand-init already present in ~/.zshrc"
+  fi
+}
+
 # Resolve Modelfile path
 resolve_modelfile() {
   # 1) SHORTHAND_MODELDIR env var
@@ -94,21 +147,10 @@ main() {
     die "Modelfile not found. Set SHORTHAND_MODELDIR or reinstall."
   fi
   ensure_cmdgen_model "$mf"
-  info "Setup complete. Open a new terminal, press Ctrl+G, and type a prompt."
-  # Ensure the Zsh widget is sourced in ~/.zshrc (idempotent)
-  if command -v brew >/dev/null 2>&1; then
-    local widget_line
-    widget_line="source '$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh'"
-    if ! grep -Fqx "$widget_line" "$HOME/.zshrc" 2>/dev/null; then
-      info "Adding Zsh widget to ~/.zshrc"
-      printf "\n%s\n" "$widget_line" >> "$HOME/.zshrc"
-      info "Added. Open a new terminal or run: exec zsh"
-    else
-      info "Zsh widget already present in ~/.zshrc"
-    fi
-  else
-    info "Homebrew not found; add manually to ~/.zshrc: source '<HOMEBREW_PREFIX>/opt/shorthand/share/shorthand/_coprompt.zsh'"
-  fi
+  # Load the widget now (when possible) and ensure future shells will run shorthand-init
+  source_widget_if_possible
+  ensure_zshrc_autoload
+  info "Setup complete. Press Ctrl+G in this or a new terminal to use Shorthand."
 }
 
 main "$@"

@@ -23,13 +23,7 @@ brew install ollama && brew services start ollama
 shorthand-init
 ```
 
-3) Add the Zsh widget to your `~/.zshrc`
-
-```sh
-echo "source '$(brew --prefix)/opt/shorthand/share/shorthand/_coprompt.zsh'" >> ~/.zshrc && source ~/.zshrc
-```
-
-4) Use it
+3) Use it
 
 - In your terminal use Ctrl+G and type a prompt (e.g., "create file its_a_great_day.txt) and press enter.
 
@@ -58,12 +52,6 @@ brew install ollama && brew services start ollama
 
 ```sh
 shorthand-init
-```
-
-4) Add the Zsh widget to your `~/.zshrc`
-
-```sh
-echo "source '$HOME/.local/share/shorthand/_coprompt.zsh'" >> ~/.zshrc && source ~/.zshrc
 ```
 
 ### Safety
