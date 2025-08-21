@@ -1,0 +1,15 @@
+C:\Users\nate\shorthand\windows\bin\Debug\net8.0-windows\Shorthand.Windows.exe
+C:\Users\nate\shorthand\windows\bin\Debug\net8.0-windows\Shorthand.Windows.deps.json
+C:\Users\nate\shorthand\windows\bin\Debug\net8.0-windows\Shorthand.Windows.runtimeconfig.json
+C:\Users\nate\shorthand\windows\bin\Debug\net8.0-windows\Shorthand.Windows.dll
+C:\Users\nate\shorthand\windows\bin\Debug\net8.0-windows\Shorthand.Windows.pdb
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.AssemblyInfoInputs.cache
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.AssemblyInfo.cs
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.csproj.CoreCompileInputs.cache
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.sourcelink.json
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.dll
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\refint\Shorthand.Windows.dll
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.pdb
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\Shorthand.Windows.genruntimeconfig.cache
+C:\Users\nate\shorthand\windows\obj\Debug\net8.0-windows\ref\Shorthand.Windows.dll
