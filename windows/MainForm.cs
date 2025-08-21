@@ -17,6 +17,7 @@ namespace Shorthand.Windows
         private ConfigurationService configService;
         private HotkeyMessageFilter messageFilter;
         private IntPtr lastTerminalWindow = IntPtr.Zero; // Added for storing terminal window handle
+        private CommandPromptForm? currentPromptForm; // Track the current shorthand window
 
         public MainForm()
         {
@@ -106,15 +107,51 @@ namespace Shorthand.Windows
 
         private void ShowCommandPrompt()
         {
-            var promptForm = new CommandPromptForm(ollamaService, configService);
-            promptForm.CommandGenerated += OnCommandGenerated;
-            promptForm.ShowDialog();
+            // If the form is already open, close it
+            if (IsShorthandWindowOpen())
+            {
+                CloseShorthandWindow();
+                return;
+            }
+
+            // Create and show the new form
+            OpenShorthandWindow();
+        }
+
+        private bool IsShorthandWindowOpen()
+        {
+            return currentPromptForm != null && !currentPromptForm.IsDisposed && currentPromptForm.Visible;
+        }
+
+        private void OpenShorthandWindow()
+        {
+            currentPromptForm = new CommandPromptForm(ollamaService, configService);
+            currentPromptForm.CommandGenerated += OnCommandGenerated;
+            currentPromptForm.FormClosed += (s, e) => 
+            {
+                // Clear reference when closed by any means
+                currentPromptForm = null;
+            };
+            
+            // Show as dialog - this will automatically handle focus and modal behavior
+            currentPromptForm.ShowDialog();
+        }
+
+        private void CloseShorthandWindow()
+        {
+            if (currentPromptForm != null && !currentPromptForm.IsDisposed)
+            {
+                currentPromptForm.Close();
+                // Don't set to null here - let the FormClosed event handle it
+            }
         }
 
         private void OnCommandGenerated(object? sender, string command)
         {
             if (string.IsNullOrWhiteSpace(command)) return;
             SendCommandToTerminal(command);
+            
+            // The FormClosed event will handle clearing the reference
         }
 
         private void SendCommandToTerminal(string command)

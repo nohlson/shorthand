@@ -76,7 +76,7 @@ namespace Shorthand.Windows
                 ModelName = "cmdgen",
                 Hotkey = "Ctrl+G",
                 ShowCommandPreview = true,
-                RequireConfirmation = true
+                RequireConfirmation = false
             };
         }
 
@@ -113,7 +113,7 @@ namespace Shorthand.Windows
         public string ModelName { get; set; } = "cmdgen";
         public string Hotkey { get; set; } = "Ctrl+G";
         public bool ShowCommandPreview { get; set; } = true;
-        public bool RequireConfirmation { get; set; } = true;
+        public bool RequireConfirmation { get; set; } = false;
     }
 
     public class TerminalConfig

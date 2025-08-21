@@ -107,7 +107,7 @@ Settings are stored in: `%LOCALAPPDATA%\Shorthand\config.json`
   "ModelName": "cmdgen",
   "Hotkey": "Ctrl+G",
   "ShowCommandPreview": true,
-  "RequireConfirmation": true
+  "RequireConfirmation": false
 }
 ```
 
